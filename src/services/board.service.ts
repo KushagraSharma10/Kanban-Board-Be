@@ -23,11 +23,11 @@ const readBoardsFromFile = async (): Promise<Board[]> => {
 };
 
 const writeBoardsToFile = async (boards: Board[]): Promise<void> => {
-  await fs.writeFile(BOARDS_FILE_PATH, JSON.stringify(boards, null, 2));
+  return await fs.writeFile(BOARDS_FILE_PATH, JSON.stringify(boards, null, 2));
 };
 
 export const getBoardsService = async (): Promise<Board[]> => {
-  return readBoardsFromFile();
+  return await readBoardsFromFile();
 };
 
 export const getBoardByIdService = async (

@@ -5,9 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon",
+    "dev:express": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "dev:http": "nodemon --watch src --ext ts --exec \"node --loader ts-node/esm src/httpServer.ts\"",
+    "dev": "npm run dev:express",
     "build": "tsc",
-    "start": "node dist/app.js"
+    "start": "node dist/app.js",
+    "start:http": "node dist/httpServer.js"
   },
   "type": "module",
   "keywords": [],
