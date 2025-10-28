@@ -9,7 +9,7 @@ export const getBoards = asyncHandler(async (_req, res) => {
 
 export const getBoardById = asyncHandler(async (req, res) => {
   const board = await boardService.findBoardById(req.params.id);
-  if (!board) throw new ApiError(404, "Board not found.");
+  if (!board) throw new ApiError(204, "Board not found.");
   res.status(200).json({ success: true, data: board });
 });
 
@@ -31,7 +31,7 @@ export const updateBoard = asyncHandler(async (req, res) => {
     req.params.id,
     updates
   );
-  if (!updatedBoard) throw new ApiError(404, "Board not found for update.");
+  if (!updatedBoard) throw new ApiError(204, "Board not found for update.");
   res
     .status(200)
     .json({ success: true, message: "Board updated.", data: updatedBoard });
@@ -39,7 +39,7 @@ export const updateBoard = asyncHandler(async (req, res) => {
 
 export const deleteBoard = asyncHandler(async (req, res) => {
   const success = await boardService.removeBoardById(req.params.id);
-  if (!success) throw new ApiError(404, "Board not found to delete.");
+  if (!success) throw new ApiError(204, "Board not found to delete.");
   res.status(200).json({
     success: true,
     message: "Board deleted successfully.",
