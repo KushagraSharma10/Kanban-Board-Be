@@ -1,0 +1,25 @@
+[
+  {
+    "id": "board-1",
+    "name": "My First Board"
+  },
+  {
+    "id": "board-2",
+    "name": "Work Board"
+  },
+  {
+    "id": "board-3",
+    "name": "Kushagra",
+    "color": "red"
+  },
+  {
+    "id": "JrGO4NLmHUE-t62NUoQiZ",
+    "name": "Board-6",
+    "color": "green"
+  },
+  {
+    "id": "NE-jiZmpuGOooV8A2-KjZ",
+    "name": "Board-8",
+    "color": "green"
+  }
+]
