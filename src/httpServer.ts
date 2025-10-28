@@ -1,11 +1,11 @@
 import http from "http";
-import { getBoardsService } from "./services/board.service.js";
+import { readBoardsFromFile } from "./services/board.service.js";
 
 const HTTP_PORT = Number(process.env.HTTP_PORT || 5000);
 
 const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && req.url === "/boards") {
-    const boards = await getBoardsService();
+    const boards = await readBoardsFromFile();
     res.writeHead(200, { "Content-Type": "application/json" });
     return res.end(JSON.stringify({ success: true, data: boards }));
   }

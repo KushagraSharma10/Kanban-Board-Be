@@ -9,96 +9,107 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const BOARDS_FILE_PATH = path.join(__dirname, "..", "data", "boards.json");
 
-const readBoardsFromFile = async (): Promise<Board[]> => {
+export const readBoardsFromFile = async (): Promise<Board[]> => {
   try {
     const jsonData = await fs.readFile(BOARDS_FILE_PATH, "utf-8");
     return JSON.parse(jsonData) as Board[];
   } catch (error) {
-    const Error = error as NodeJS.ErrnoException;
-    if (Error.code === "ENOENT") {
+    const fileError = error as NodeJS.ErrnoException;
+    if (fileError.code === "ENOENT") {
       return [];
     }
-    throw error;
+    throw new ApiError(500, "Failed to read boards data");
   }
 };
 
 const writeBoardsToFile = async (boards: Board[]): Promise<void> => {
-  return await fs.writeFile(BOARDS_FILE_PATH, JSON.stringify(boards, null, 2));
+  try {
+    await fs.writeFile(BOARDS_FILE_PATH, JSON.stringify(boards, null, 2));
+  } catch (error) {
+    throw new ApiError(500, "Failed to persist boards data");
+  }
 };
 
-export const getBoardsService = async (): Promise<Board[]> => {
-  return await readBoardsFromFile();
+export const findBoardById = async (id: string): Promise<Board | null> => {
+  try {
+    const existingBoards = await readBoardsFromFile();
+    return existingBoards.find((board) => board.id === id) || null;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, "Failed to fetch board by id");
+  }
 };
 
-export const getBoardByIdService = async (
-  id: string
-): Promise<Board | null> => {
-  const boards = await readBoardsFromFile();
-  return boards.find((board) => board.id === id) || null;
-};
-
-export const createBoardService = async (
+export const addNewBoard = async (
   name: string,
   color: string
 ): Promise<Board> => {
-  const boards = await readBoardsFromFile();
+  try {
+    const existingBoards = await readBoardsFromFile();
 
-  const isDuplicate = boards.some((board) => board.name === name);
-  if (isDuplicate) {
-    throw new ApiError(409, "Board with this name already exists");
+    const isDuplicate = existingBoards.some((board) => board.name === name);
+    if (isDuplicate) {
+      throw new ApiError(409, "Board with this name already exists");
+    }
+
+    const newBoard: Board = { id: nanoid(), name, color };
+    existingBoards.push(newBoard);
+    await writeBoardsToFile(existingBoards);
+
+    return newBoard;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, "Failed to create board");
   }
-
-  const newBoard: Board = {
-    id: nanoid(),
-    name,
-    color,
-  };
-
-  boards.push(newBoard);
-  await writeBoardsToFile(boards);
-
-  return newBoard;
 };
 
-export const updateBoardService = async (
-  id: string,
-  updates: Partial<Board>
+export const modifyBoardById = async (
+  boardId: string,
+  updatedFields: Partial<Board>
 ): Promise<Board | null> => {
-  const boards = await readBoardsFromFile();
+  try {
+    const existingBoards = await readBoardsFromFile();
+    let updatedBoardData: Board | null = null;
 
-  let updatedBoard: Board | null = null;
+    const updatedBoardsList = existingBoards.map((currentBoard) => {
+      if (currentBoard.id !== boardId) return currentBoard;
 
-  const newBoards = boards.map((board) => {
-    if (board.id !== id) return board;
+      const mergedBoard: Board = {
+        id: boardId,
+        name: updatedFields.name ?? currentBoard.name,
+        color: updatedFields.color ?? currentBoard.color,
+      };
 
-    const merged: Board = {
-      id,
-      name: updates.name !== undefined ? updates.name : board.name,
-      color: updates.color !== undefined ? updates.color : board.color,
-    };
+      updatedBoardData = mergedBoard;
+      return mergedBoard;
+    });
 
-    updatedBoard = merged;
-    return merged;
-  });
+    if (!updatedBoardData) {
+      return null;
+    }
 
-  if (!updatedBoard) {
-    return null;
+    await writeBoardsToFile(updatedBoardsList);
+    return updatedBoardData;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, "Failed to update board");
   }
-
-  await writeBoardsToFile(newBoards);
-  return updatedBoard;
 };
 
-export const deleteBoardService = async (id: string): Promise<boolean> => {
-  const boards = await readBoardsFromFile();
+export const removeBoardById = async (id: string): Promise<boolean> => {
+  try {
+    const existingBoards = await readBoardsFromFile();
+    const initialLength = existingBoards.length;
+    const newBoards = existingBoards.filter((board) => board.id !== id);
 
-  const initialLength = boards.length;
-  const newBoards = boards.filter((board) => board.id !== id);
+    if (newBoards.length === initialLength) {
+      return false;
+    }
 
-  if (newBoards.length === initialLength) {
-    return false;
+    await writeBoardsToFile(newBoards);
+    return true;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, "Failed to delete board");
   }
-
-  await writeBoardsToFile(newBoards);
-  return true;
 };
