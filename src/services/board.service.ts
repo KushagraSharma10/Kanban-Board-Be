@@ -26,7 +26,7 @@ const writeBoardsToFile = async (boards: Board[]): Promise<void> => {
   try {
     await fs.writeFile(BOARDS_FILE_PATH, JSON.stringify(boards, null, 2));
   } catch (error) {
-    throw new ApiError(500, "Failed to persist boards data");
+    throw new ApiError(500, "Failed to save boards data");
   }
 };
 
@@ -47,7 +47,10 @@ export const addNewBoard = async (
   try {
     const existingBoards = await readBoardsFromFile();
 
-    const isDuplicate = existingBoards.some((board) => board.name === name);
+    const normalizedName = name.trim().toLowerCase();
+    const isDuplicate = existingBoards.some(
+      (board) => board.name.trim().toLowerCase() === normalizedName
+    );
     if (isDuplicate) {
       throw new ApiError(409, "Board with this name already exists");
     }

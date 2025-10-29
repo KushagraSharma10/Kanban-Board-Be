@@ -4,14 +4,24 @@ import { asyncHandler } from "../middlewares/asyncHandler.js";
 
 export const getBoards = asyncHandler(async (_req, res) => {
   const boards = await boardService.readBoardsFromFile();
-  res.status(200).json({ success: true, data: boards });
+  res.status(200).json({
+    success: true,
+    message: "Boards fetched successfully.",
+    data: boards,
+  });
 });
 
 export const getBoardById = asyncHandler(async (req, res) => {
   const board = await boardService.findBoardById(req.params.id);
   if (!board) throw new ApiError(204, "Board not found.");
-  res.status(200).json({ success: true, data: board });
-});
+  res
+    .status(200)
+    .json({
+      success: true,
+      message: "Board fetched successfully.",
+      data: board,
+    });
+}); 
 
 export const createBoard = asyncHandler(async (req, res) => {
   const { name, color } = req.body;
@@ -19,7 +29,11 @@ export const createBoard = asyncHandler(async (req, res) => {
   const newBoard = await boardService.addNewBoard(name, color);
   res
     .status(201)
-    .json({ success: true, message: "Board created.", data: newBoard });
+    .json({
+      success: true,
+      message: "Board created successfully.",
+      data: newBoard,
+    });
 });
 
 export const updateBoard = asyncHandler(async (req, res) => {
@@ -34,7 +48,11 @@ export const updateBoard = asyncHandler(async (req, res) => {
   if (!updatedBoard) throw new ApiError(204, "Board not found for update.");
   res
     .status(200)
-    .json({ success: true, message: "Board updated.", data: updatedBoard });
+    .json({
+      success: true,
+      message: "Board updated successfully.",
+      data: updatedBoard,
+    });
 });
 
 export const deleteBoard = asyncHandler(async (req, res) => {
@@ -43,6 +61,6 @@ export const deleteBoard = asyncHandler(async (req, res) => {
   res.status(200).json({
     success: true,
     message: "Board deleted successfully.",
-    deletedBoardId: req.params.id,
+    data: { deletedBoardId: req.params.id },
   });
 });
