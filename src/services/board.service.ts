@@ -1,118 +1,70 @@
-import * as fs from "fs/promises";
-import path from "path";
-import { nanoid } from "nanoid";
-import { fileURLToPath } from "url";
-import { Board } from "../interfaces/boards";
+import { Types } from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
+import { isMember, isAdmin } from "../utils/boardAuth.js";
+import {
+  createBoardDoc,
+  findBoardsForUser,
+  findBoardById,
+  saveBoard,
+  deleteBoardById,
+} from "../dao/board.dao.js";
+import { addBoardToUser, pullBoardFromAllUsers } from "../dao/user.dao.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const BOARDS_FILE_PATH = path.join(__dirname, "..", "data", "boards.json");
-
-export const readBoardsFromFile = async (): Promise<Board[]> => {
-  try {
-    const jsonData = await fs.readFile(BOARDS_FILE_PATH, "utf-8");
-    return JSON.parse(jsonData) as Board[];
-  } catch (error) {
-    const fileError = error as NodeJS.ErrnoException;
-    if (fileError.code === "ENOENT") {
-      return [];
-    }
-    throw new ApiError(500, "Failed to read boards data");
+export const createBoardCore = async(
+  creatorUserId: string,
+  input: { name: string; type: string; color: string }
+) => {
+ if (!input?.name || !input?.color || !input?.type) {
+    throw new ApiError(400, "All fields name, color, type are required");
   }
-};
 
-const writeBoardsToFile = async (boards: Board[]): Promise<void> => {
-  try {
-    await fs.writeFile(BOARDS_FILE_PATH, JSON.stringify(boards, null, 2));
-  } catch (error) {
-    throw new ApiError(500, "Failed to save boards data");
-  }
-};
+  const board = await createBoardDoc({
+    name: input.name.trim(),
+    type: input.type.trim(),
+    color: input.color.trim(),
+    createdBy: new Types.ObjectId(creatorUserId),
+    creatorMember: { user: new Types.ObjectId(creatorUserId), roles: ["admin"] },
+  });
 
-export const findBoardById = async (id: string): Promise<Board | null> => {
-  try {
-    const existingBoards = await readBoardsFromFile();
-    return existingBoards.find((board) => board.id === id) || null;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(500, "Failed to fetch board by id");
-  }
-};
+  await addBoardToUser(creatorUserId, board._id as Types.ObjectId);
+  return board;
+}
 
-export const addNewBoard = async (
-  name: string,
-  color: string
-): Promise<Board> => {
-  try {
-    const existingBoards = await readBoardsFromFile();
+export const listBoardsForUser = async(userId: string) => {
+  return findBoardsForUser(userId);
+}
 
-    const normalizedName = name.trim().toLowerCase();
-    const isDuplicate = existingBoards.some(
-      (board) => board.name.trim().toLowerCase() === normalizedName
-    );
-    if (isDuplicate) {
-      throw new ApiError(409, "Board with this name already exists");
-    }
+export const getBoard = async(requestingUserId: string, boardId: string) => {
+  const board = await findBoardById(boardId);
+  if (!board) throw new ApiError(204, "Board not found");
+  if (!isMember(requestingUserId, board)) throw new ApiError(403, "You are not a member of this board");
+  return board;
+}
 
-    const newBoard: Board = { id: nanoid(), name, color };
-    existingBoards.push(newBoard);
-    await writeBoardsToFile(existingBoards);
-
-    return newBoard;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(500, "Failed to create board");
-  }
-};
-
-export const modifyBoardById = async (
+export const updateBoardCore = async(
+  requestingUserId: string,
   boardId: string,
-  updatedFields: Partial<Board>
-): Promise<Board | null> => {
-  try {
-    const existingBoards = await readBoardsFromFile();
-    let updatedBoardData: Board | null = null;
+  input: { name?: string; type?: string; color?: string }
+) => {
+  const board = await findBoardById(boardId);
+  if (!board) throw new ApiError(204, "Board not found");
+  if (!isAdmin(requestingUserId, board)) throw new ApiError(403, "Only board admins can update the board");
 
-    const updatedBoardsList = existingBoards.map((currentBoard) => {
-      if (currentBoard.id !== boardId) return currentBoard;
+  if (typeof input.name !== "undefined") board.name = input.name;
+  if (typeof input.type !== "undefined") board.type = input.type;
+  if (typeof input.color !== "undefined") board.color = input.color;
 
-      const mergedBoard: Board = {
-        id: boardId,
-        name: updatedFields.name ?? currentBoard.name,
-        color: updatedFields.color ?? currentBoard.color,
-      };
+  const saved = await saveBoard(board);
+  return saved;
+}
 
-      updatedBoardData = mergedBoard;
-      return mergedBoard;
-    });
+export const deleteBoardCore = async(requestingUserId: string, boardId: string) => {
+  const board = await findBoardById(boardId);
+  if (!board) throw new ApiError(204, "Board not found");
+  if (!isAdmin(requestingUserId, board)) throw new ApiError(403, "Only board admins can delete the board");
 
-    if (!updatedBoardData) {
-      return null;
-    }
+  await deleteBoardById(boardId);
+  await pullBoardFromAllUsers(boardId);
 
-    await writeBoardsToFile(updatedBoardsList);
-    return updatedBoardData;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(500, "Failed to update board");
-  }
-};
-
-export const removeBoardById = async (id: string): Promise<boolean> => {
-  try {
-    const existingBoards = await readBoardsFromFile();
-    const initialLength = existingBoards.length;
-    const newBoards = existingBoards.filter((board) => board.id !== id);
-
-    if (newBoards.length === initialLength) {
-      return false;
-    }
-
-    await writeBoardsToFile(newBoards);
-    return true;
-  } catch (error) {
-    if (error instanceof ApiError) throw error;
-    throw new ApiError(500, "Failed to delete board");
-  }
-};
+  return true;
+}
