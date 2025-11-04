@@ -1,22 +1,26 @@
 import { Router } from "express";
+import { requireAuth } from "../middlewares/requireAuth.js";
+import { validate } from "../middlewares/validate.middleware.js";
+import {
+  createBoardSchema,
+  updateBoardSchema,
+} from "../validators/board.schema.js";
 import {
   createBoard,
-  deleteBoard,
+  getMyBoards,
   getBoardById,
-  getBoards,
   updateBoard,
+  deleteBoard,
 } from "../controllers/board.controller.js";
 
 const router = Router();
 
-router.get("/", getBoards);
+router.use(requireAuth);
 
-router.post("/", createBoard);
-
+router.get("/", getMyBoards);
 router.get("/:id", getBoardById);
-
-router.patch("/:id", updateBoard);
-
+router.post("/", validate(createBoardSchema), createBoard);
+router.patch("/:id", validate(updateBoardSchema), updateBoard);
 router.delete("/:id", deleteBoard);
 
 export default router;
