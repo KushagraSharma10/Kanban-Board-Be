@@ -17,11 +17,7 @@ const router = Router({ mergeParams: true });
 
 router.use(requireAuth);
 
-router.post(
-  "/:columnId/tasks",
-  validate(createTaskBodySchema),
-  createTaskInColumn
-);
+router.post("/tasks", validate(createTaskBodySchema), createTaskInColumn);
 
 router.patch(
   "/tasks/:taskId",
