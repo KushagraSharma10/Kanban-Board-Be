@@ -10,7 +10,7 @@ import {
 } from "../dao/board.dao.js";
 import { addBoardToUser, pullBoardFromAllUsers } from "../dao/user.dao.js";
 
-export const createBoardCore = async(
+export const createBoardService = async(
   creatorUserId: string,
   input: { name: string; type: string; color: string }
 ) => {
@@ -41,7 +41,7 @@ export const getBoard = async(requestingUserId: string, boardId: string) => {
   return board;
 }
 
-export const updateBoardCore = async(
+export const updateBoardService = async(
   requestingUserId: string,
   boardId: string,
   input: { name?: string; type?: string; color?: string }
@@ -58,7 +58,7 @@ export const updateBoardCore = async(
   return saved;
 }
 
-export const deleteBoardCore = async(requestingUserId: string, boardId: string) => {
+export const deleteBoardService = async(requestingUserId: string, boardId: string) => {
   const board = await findBoardById(boardId);
   if (!board) throw new ApiError(204, "Board not found");
   if (!isAdmin(requestingUserId, board)) throw new ApiError(403, "Only board admins can delete the board");

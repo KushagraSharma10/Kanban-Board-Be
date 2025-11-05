@@ -23,12 +23,16 @@ router.post(
   createTaskInColumn
 );
 
-router.patch("/:columnId/tasks/:taskId", validate(updateTaskBodySchema), updateTaskDetails );
+router.patch(
+  "/tasks/:taskId",
+  validate(updateTaskBodySchema),
+  updateTaskDetails
+);
 
-router.get("/:columnId/tasks", getTasksForColumn);
+router.get("/tasks", getTasksForColumn);
 
-router.delete("/:columnId/tasks/:taskId", deleteTaskFromColumn);
+router.delete("/tasks/:taskId", deleteTaskFromColumn);
 
-router.get("/:columnId/tasks/:taskId", getTaskById);
+router.get("/tasks/:taskId", getTaskById);
 
 export default router;

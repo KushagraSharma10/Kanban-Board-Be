@@ -26,7 +26,7 @@ const computeRefreshExpiryDate = (): Date => {
   return date;
 };
 
-export const registerUserCore = async (input: RegisterInput) => {
+export const registerUserService = async (input: RegisterInput) => {
   const existing = await findUserByEmail(input.email);
   if (existing) {
     throw new ApiError(409, "Email already registered");
@@ -62,7 +62,7 @@ export const registerUserCore = async (input: RegisterInput) => {
   };
 };
 
-export const loginUserCore = async (input: LoginInput) => {
+export const loginUserService = async (input: LoginInput) => {
   const user = await findUserByEmail(input.email);
   if (!user) throw new ApiError(401, "Invalid credentials");
 
@@ -91,7 +91,7 @@ export const loginUserCore = async (input: LoginInput) => {
   };
 };
 
-export const getCurrentUserCore = async (userId: string) => {
+export const getCurrentUserService = async (userId: string) => {
   const user = await findUserById(userId);
   if (!user) throw new ApiError(204, "User not found");
 
@@ -103,7 +103,7 @@ export const getCurrentUserCore = async (userId: string) => {
   };
 };
 
-export const refreshTokensCore = async (refreshTokenFromCookie: string) => {
+export const refreshTokensService = async (refreshTokenFromCookie: string) => {
   let decoded: { userId: string; tokenId: string };
   try {
     decoded = verifyRefreshToken(refreshTokenFromCookie);
@@ -139,7 +139,7 @@ export const refreshTokensCore = async (refreshTokenFromCookie: string) => {
   };
 };
 
-export const logoutCore = async (userId: string) => {
+export const logoutService = async (userId: string) => {
   await clearRefreshTokenForUser(userId);
   return true;
 };

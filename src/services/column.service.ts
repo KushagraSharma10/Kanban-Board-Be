@@ -45,7 +45,7 @@ export const listColumnsForBoard = async (
   return findColumnsByBoardIdSorted(boardId);
 };
 
-export const createColumnCore = async (
+export const createColumnService = async (
   requestingUserId: string,
   boardId: string,
   name: string
@@ -66,7 +66,7 @@ export const createColumnCore = async (
   });
 };
 
-export const updateColumnCore = async (
+export const updateColumnService = async (
   requestingUserId: string,
   boardId: string,
   columnId: string,
@@ -82,7 +82,7 @@ export const updateColumnCore = async (
   return updated;
 };
 
-export const deleteColumnCore = async (
+export const deleteColumnService = async (
   requestingUserId: string,
   boardId: string,
   columnId: string
@@ -96,14 +96,14 @@ export const deleteColumnCore = async (
   return true;
 };
 
-export const reorderColumnsCore = async (
+export const reorderColumnsService = async (
   requestingUserId: string,
   boardId: string,
   updates: Array<{ columnId: string; position: number }>
 ) => {
   await ensureBoardAndMembership(requestingUserId, boardId);
 
-  if (!Array.isArray(updates) || updates.length === 0) {
+  if (!Array.isArray(updates) || !updates.length) {
     throw new ApiError(400, "Updates array is required");
   }
 

@@ -14,7 +14,7 @@ export const findUserById = async (
   userId: string | Types.ObjectId
 ): Promise<UserDocument | null> => {
   return UserModel.findById(userId).select(
-    "-password -refreshTokenHash -refreshTokenExpiresAt"
+    "-password "
   );
 };
 

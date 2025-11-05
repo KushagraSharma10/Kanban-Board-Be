@@ -16,8 +16,8 @@ import { CreateTaskParams, CreateTaskBody , UpdateTaskParams,
 
 export const createTaskInColumn = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.userId!;
-  const doc = await createTask(userId, req.params as unknown as CreateTaskParams, req.body as CreateTaskBody);
-  res.status(201).json({ success: true, message: "Task created", data: doc });
+  const taskDoc = await createTask(userId, req.params as unknown as CreateTaskParams, req.body as CreateTaskBody);
+  res.status(201).json({ success: true, message: "Task created", data: taskDoc });
 });
 
 export const updateTaskDetails = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
