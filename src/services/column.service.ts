@@ -15,7 +15,7 @@ import {
   findSingleColumnForBoard,
   bulkWritePositions,
 } from "../dao/column.dao.js";
-import { ColumnDocument } from "../models/column.model.js";
+import { ColumnDocument } from "../interfaces/column.js";
 
 const ensureBoardAndMembership = async (
   requestingUserId: string,
@@ -35,7 +35,7 @@ export const listColumnsForBoard = async (
   await ensureBoardAndMembership(requestingUserId, boardId);
 
   const existingCount = await countColumnsByBoardId(boardId);
-  if (existingCount === 0) {
+  if (!existingCount) {
     await insertDefaultColumns(boardId, requestingUserId, [
       "To Do",
       "In Progress",
@@ -114,14 +114,14 @@ export const reorderColumnsCore = async (
   if (found.length !== updates.length)
     throw new ApiError(400, "Invalid columns in updates");
 
-  const ops: AnyBulkWriteOperation<ColumnDocument>[] = updates.map((u) => ({
+  const operations: AnyBulkWriteOperation<ColumnDocument>[] = updates.map((update) => ({
     updateOne: {
-      filter: { _id: new Types.ObjectId(u.columnId), boardId: boardObjectId },
-      update: { $set: { position: u.position } },
+      filter: { _id: new Types.ObjectId(update.columnId), boardId: boardObjectId },
+      update: { $set: { position: update.position } },
     },
   }));
 
-   await bulkWritePositions(ops);
+   await bulkWritePositions(operations);
   return findColumnsByBoardIdSorted(boardId);
 };
 

@@ -10,7 +10,7 @@ import type { AuthenticatedRequest } from "../middlewares/requireAuth.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { REFRESH_COOKIE_NAME, refreshCookieOptions } from "../utils/jwt.js";
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
+export const register = asyncHandler(async (req: Request, res: Response) => { 
   const { fullName, email, password } = req.body;
   const result = await registerUserCore({ fullName, email, password });
 
@@ -41,7 +41,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const getMe = asyncHandler(
+export const getCurrentUser = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId!;
     const user = await getCurrentUserCore(userId);

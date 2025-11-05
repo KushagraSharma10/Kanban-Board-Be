@@ -28,7 +28,6 @@ const ensureColumnInBoard = async (boardId: string, columnId: string) => {
   if (!exists) throw new ApiError(204, "Column not found");
 };
 
-
 export const createTask = async (
   requestingUserId: string,
   params: { boardId: string; columnId: string },

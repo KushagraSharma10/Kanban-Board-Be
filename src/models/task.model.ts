@@ -1,21 +1,5 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-
-export type TaskPriority = "low" | "medium" | "high";
-
-export interface TaskDocument extends Document {
-  boardId: Types.ObjectId;
-  columnId: Types.ObjectId;
-  title: string;
-  description?: string;
-  priority?: TaskPriority;
-  dueDate?: Date;
-  assigneeId?: Types.ObjectId | null;
-  assigneeEmail?: string | null;
-  position: number; 
-  createdBy: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { TaskDocument } from "../interfaces/task";
 
 const taskSchema = new Schema<TaskDocument>(
   {

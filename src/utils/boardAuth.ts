@@ -1,5 +1,5 @@
 import { Types } from "mongoose";
-import type { BoardDocument } from "../models/board.model.js";
+import { BoardDocument } from "../interfaces/boards";
 
 export function isMember(userId: string, board: BoardDocument) {
   return board.members.some(member => String(member.user) === String(userId));
