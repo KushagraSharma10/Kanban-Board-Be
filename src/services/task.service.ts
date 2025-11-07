@@ -13,13 +13,18 @@ import {
   compactTaskPositionsAfter,
 } from "../dao/task.dao.js";
 import { ensureAssigneeMembershipAndResolveIds } from "../utils/assignee.helper.js";
+import { CreateTaskBody, UpdateTaskBody } from "../interfaces/task.js";
 
 const isValidObjectId = mongoose.Types.ObjectId.isValid;
 
-const ensureBoardAndMember = async (requestingUserId: string, boardId: string) => {
+const ensureBoardAndMember = async (
+  requestingUserId: string,
+  boardId: string
+) => {
   const boardDoc = await BoardModel.findById(boardId);
   if (!boardDoc) throw new ApiError(204, "Board not found");
-  if (!isMember(requestingUserId, boardDoc)) throw new ApiError(403, "Not a board member");
+  if (!isMember(requestingUserId, boardDoc))
+    throw new ApiError(403, "Not a board member");
   return boardDoc;
 };
 
@@ -31,13 +36,7 @@ const ensureColumnInBoard = async (boardId: string, columnId: string) => {
 export const createTask = async (
   requestingUserId: string,
   params: { boardId: string; columnId: string },
-  body: {
-    title: string;
-    description?: string | null;
-    priority?: "low" | "medium" | "high";
-    dueDate?: string | null;
-    assigneeEmail?: string | null; 
-  }
+  body: CreateTaskBody
 ) => {
   const { boardId, columnId } = params;
 
@@ -48,7 +47,10 @@ export const createTask = async (
     throw new ApiError(400, "Task title is required");
   }
 
-  await ensureBoardAndMember(requestingUserId, boardId);
+  const boardDoc = await ensureBoardAndMember(requestingUserId, boardId);
+  if (!isAdmin(requestingUserId, boardDoc)) {
+    throw new ApiError(403, "Only admins can create tasks");
+  }
   await ensureColumnInBoard(boardId, columnId);
 
   let resolvedAssigneeId: Types.ObjectId | null = null;
@@ -56,13 +58,16 @@ export const createTask = async (
 
   if (typeof body.assigneeEmail !== "undefined") {
     const { assigneeUserId, normalizedAssigneeEmail } =
-      await ensureAssigneeMembershipAndResolveIds(body.assigneeEmail ?? null, boardId);
+      await ensureAssigneeMembershipAndResolveIds(
+        body.assigneeEmail ?? null,
+        boardId
+      );
     resolvedAssigneeId = assigneeUserId;
     resolvedAssigneeEmail = normalizedAssigneeEmail;
   }
 
   const last = await findLastTaskInColumn(boardId, columnId);
-  const nextPosition = last.length > 0 ? (last[0].position ?? 0) + 1 : 0;
+  const nextPosition = last ? (last.position ?? 0) + 1 : 0;
 
   const doc = await createTaskDoc({
     boardId: toObjectId(boardId),
@@ -83,23 +88,22 @@ export const createTask = async (
 export const updateTask = async (
   requestingUserId: string,
   params: { boardId: string; columnId: string; taskId: string },
-  body: {
-    title?: string;
-    description?: string | null;
-    priority?: "low" | "medium" | "high";
-    dueDate?: string | null;
-    assigneeEmail?: string | null;
-  }
+  body: UpdateTaskBody
 ) => {
   const { boardId, columnId, taskId } = params;
 
-  if (!isValidObjectId(boardId) || !isValidObjectId(columnId) || !isValidObjectId(taskId)) {
+  if (
+    !isValidObjectId(boardId) ||
+    !isValidObjectId(columnId) ||
+    !isValidObjectId(taskId)
+  ) {
     throw new ApiError(400, "Invalid IDs in path");
   }
 
   const boardDoc = await BoardModel.findById(boardId);
   if (!boardDoc) throw new ApiError(204, "Board not found");
-  if (!isAdmin(requestingUserId, boardDoc)) throw new ApiError(403, "Only admin can update tasks");
+  if (!isAdmin(requestingUserId, boardDoc))
+    throw new ApiError(403, "Only admin can update tasks");
 
   await ensureColumnInBoard(boardId, columnId);
 
@@ -108,14 +112,19 @@ export const updateTask = async (
 
   const updatePayload: Record<string, unknown> = {};
   if (typeof body.title !== "undefined") updatePayload.title = body.title;
-  if (typeof body.description !== "undefined") updatePayload.description = body.description;
-  if (typeof body.priority !== "undefined") updatePayload.priority = body.priority;
+  if (typeof body.description !== "undefined")
+    updatePayload.description = body.description;
+  if (typeof body.priority !== "undefined")
+    updatePayload.priority = body.priority;
   if (typeof body.dueDate !== "undefined")
     updatePayload.dueDate = body.dueDate ? new Date(body.dueDate) : null;
 
   if (typeof body.assigneeEmail !== "undefined") {
     const { assigneeUserId, normalizedAssigneeEmail } =
-      await ensureAssigneeMembershipAndResolveIds(body.assigneeEmail ?? null, boardId);
+      await ensureAssigneeMembershipAndResolveIds(
+        body.assigneeEmail ?? null,
+        boardId
+      );
 
     updatePayload.assigneeId = assigneeUserId;
     updatePayload.assigneeEmail = normalizedAssigneeEmail;
@@ -131,7 +140,8 @@ export const getTasks = async (
 ) => {
   const { boardId, columnId } = params;
 
-  if (!boardId || !columnId) throw new ApiError(400, "BoardId and ColumnId are required");
+  if (!boardId || !columnId)
+    throw new ApiError(400, "BoardId and ColumnId are required");
 
   await ensureBoardAndMember(requestingUserId, boardId);
   await ensureColumnInBoard(boardId, columnId);
@@ -145,13 +155,18 @@ export const deleteTask = async (
 ) => {
   const { boardId, columnId, taskId } = params;
 
-  if (!isValidObjectId(boardId) || !isValidObjectId(columnId) || !isValidObjectId(taskId)) {
+  if (
+    !isValidObjectId(boardId) ||
+    !isValidObjectId(columnId) ||
+    !isValidObjectId(taskId)
+  ) {
     throw new ApiError(400, "Invalid IDs in path");
   }
 
   const boardDoc = await BoardModel.findById(boardId);
   if (!boardDoc) throw new ApiError(204, "Board not found");
-  if (!isAdmin(requestingUserId, boardDoc)) throw new ApiError(403, "Only admin can delete tasks");
+  if (!isAdmin(requestingUserId, boardDoc))
+    throw new ApiError(403, "Only admin can delete tasks");
 
   await ensureColumnInBoard(boardId, columnId);
 
@@ -168,7 +183,11 @@ export const getTask = async (
 ) => {
   const { boardId, columnId, taskId } = params;
 
-  if (!isValidObjectId(boardId) || !isValidObjectId(columnId) || !isValidObjectId(taskId)) {
+  if (
+    !isValidObjectId(boardId) ||
+    !isValidObjectId(columnId) ||
+    !isValidObjectId(taskId)
+  ) {
     throw new ApiError(400, "Invalid IDs in path");
   }
 

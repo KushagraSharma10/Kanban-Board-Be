@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types } from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { TaskDocument } from "../interfaces/task";
 
 const taskSchema = new Schema<TaskDocument>(
@@ -17,7 +17,7 @@ const taskSchema = new Schema<TaskDocument>(
     },
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
-    priority: { type: String, enum: ["low", "medium", "high"] },
+    priority: { type: String, enum: ["none", "low", "moderate", "high" , "urgent"] },
     dueDate: { type: Date },
     assigneeId: { type: Schema.Types.ObjectId, ref: "User", default: null },
     assigneeEmail: { type: String, trim: true, default: null },

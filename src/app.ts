@@ -35,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/auth", authRoutes);
 app.use("/boards", boardRoutes);
 app.use("/:boardId/columns", columnRoutes)
-app.use("/:boardId/columns/:columnsId", taskRoutes)
+app.use("/:boardId/columns/:columnId", taskRoutes)
 
 
 app.use(errorHandler);

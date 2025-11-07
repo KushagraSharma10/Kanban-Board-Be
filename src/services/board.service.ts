@@ -23,7 +23,6 @@ export const createBoardService = async(
     type: input.type.trim(),
     color: input.color.trim(),
     createdBy: new Types.ObjectId(creatorUserId),
-    creatorMember: { user: new Types.ObjectId(creatorUserId), roles: ["admin"] },
   });
 
   await addBoardToUser(creatorUserId, board._id as Types.ObjectId);

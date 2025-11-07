@@ -4,7 +4,6 @@ import {
   createUser,
   findUserById,
   setRefreshTokenForUser,
-  verifyUserRefreshToken,
   clearRefreshTokenForUser,
 } from "../dao/user.dao.js";
 import {
@@ -15,6 +14,7 @@ import {
 import { ApiError } from "../utils/ApiError.js";
 import { Types } from "mongoose";
 import { LoginInput, RegisterInput } from "../types/user.js";
+import { verifyUserRefreshToken } from "../utils/verifyToken.js";
 
 const computeRefreshExpiryDate = (): Date => {
   const days =

@@ -1,11 +1,12 @@
 import { Types } from "mongoose";
+import { BoardMember } from "../interfaces/boards";
 
 export type CreateBoardInput = {
   name: string;
   type: string;
   color: string;
   createdBy: Types.ObjectId | string;
-  creatorMember: { user: Types.ObjectId | string; roles: Array<"admin" | "user"> };
+  members?: BoardMember[],
 };
 
 export type BoardMemberRole = "admin" | "user";

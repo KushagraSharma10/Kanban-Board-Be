@@ -10,7 +10,7 @@ export interface TaskDocument extends Document {
   dueDate?: Date;
   assigneeId?: Types.ObjectId | null;
   assigneeEmail?: string | null;
-  position: number; 
+  position: number;
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -47,7 +47,7 @@ export interface DeleteTaskParams {
 export interface CreateTaskBody {
   title: string;
   description?: string | null;
-  priority?: "low" | "medium" | "high";
+  priority?: TaskPriority;
   dueDate?: string | null;
   assigneeEmail?: string | null;
 }
@@ -55,7 +55,7 @@ export interface CreateTaskBody {
 export interface UpdateTaskBody {
   title?: string;
   description?: string | null;
-  priority?: "low" | "medium" | "high";
+  priority?: TaskPriority;
   dueDate?: string | null;
   assigneeEmail?: string | null;
 }

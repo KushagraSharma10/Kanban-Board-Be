@@ -3,13 +3,13 @@ import { BoardModel } from "../models/board.model.js";
 import { CreateBoardInput } from "../types/board.js";
 
 export const createBoardDoc = async(input: CreateBoardInput): Promise<BoardDocument> => {
-  const { name, type, color, createdBy, creatorMember } = input;
+  const { name, type, color, createdBy, members = [] } = input;
   return BoardModel.create({
     name,
     type,
     color,
     createdBy,
-    members: [creatorMember],
+    members,
   });
 }
 
