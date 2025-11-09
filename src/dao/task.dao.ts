@@ -1,15 +1,16 @@
 import { Types } from "mongoose";
 import { TaskModel } from "../models/task.model.js";
+import { TaskPriority } from "../types/task.js";
 
 export const findLastTaskInColumn = (boardId: string, columnId: string) =>
-  TaskModel.find({ boardId, columnId }).sort({ position: -1 }).limit(1).lean();
+  TaskModel.findOne({ boardId, columnId }).sort({ position: -1 }).lean();
 
 export const createTaskDoc = (input: {
   boardId: Types.ObjectId;
   columnId: Types.ObjectId;
   title: string;
   description?: string;
-  priority?: "low" | "medium" | "high";
+  priority?: TaskPriority;
   dueDate?: Date;
   assigneeId?: Types.ObjectId | null;
   assigneeEmail?: string | null;
@@ -28,7 +29,14 @@ export const findTaskInBoardColumn = (
 
 export const updateTaskById = (
   taskId: string,
-  update: Record<string, unknown>
+  update: Partial<{
+    title: string;
+    description: string | null;
+    priority: TaskPriority | null;      
+    dueDate: Date | null;
+    assigneeId: Types.ObjectId | null;
+    assigneeEmail: string | null;
+  }>
 ) => TaskModel.findByIdAndUpdate(taskId, update, { new: true });
 
 export const deleteTaskInBoardColumn = (

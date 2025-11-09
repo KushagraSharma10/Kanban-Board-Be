@@ -1,23 +1,15 @@
-import { Types } from "mongoose";
+import { BoardDocument } from "../interfaces/boards.js";
 import { BoardModel } from "../models/board.model.js";
-import type { BoardDocument } from "../models/board.model.js";
-
-export type CreateBoardInput = {
-  name: string;
-  type: string;
-  color: string;
-  createdBy: Types.ObjectId | string;
-  creatorMember: { user: Types.ObjectId | string; roles: Array<"admin" | "user"> };
-};
+import { CreateBoardInput } from "../types/board.js";
 
 export const createBoardDoc = async(input: CreateBoardInput): Promise<BoardDocument> => {
-  const { name, type, color, createdBy, creatorMember } = input;
+  const { name, type, color, createdBy, members = [] } = input;
   return BoardModel.create({
     name,
     type,
     color,
     createdBy,
-    members: [creatorMember],
+    members,
   });
 }
 

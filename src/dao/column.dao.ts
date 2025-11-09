@@ -1,6 +1,6 @@
 import { AnyBulkWriteOperation, Types } from "mongoose";
 import { ColumnModel } from "../models/column.model.js";
-import type { ColumnDocument } from "../models/column.model.js";
+import { ColumnDocument } from "../interfaces/column.js";
 
 export const countColumnsByBoardId = (boardId: string) =>
   ColumnModel.countDocuments({ boardId });
@@ -23,7 +23,7 @@ export const findColumnsByBoardIdSorted = (boardId: string) =>
   ColumnModel.find({ boardId }).sort({ position: 1 }).lean();
 
 export const findLastColumnInBoard = (boardId: string) =>
-  ColumnModel.find({ boardId }).sort({ position: -1 }).limit(1).lean();
+  ColumnModel.findOne({ boardId }).sort({ position: -1 }).lean();
 
 export const createColumnDoc = (input: {
   boardId: string;

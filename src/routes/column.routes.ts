@@ -19,15 +19,12 @@ const router = Router({ mergeParams: true });
 router.use(requireAuth);
 
 router.get("/", getColumnsForBoard);
-
 router.get("/:columnId", getSingleColumn);
-
 router.post("/", validate(createColumnSchema), createColumn);
 
-router.patch("/:columnId", validate(updateColumnSchema), updateColumn);
-
-router.delete("/:columnId", deleteColumn);
-
 router.patch("/reorder", validate(reorderSchema), reorderColumns);
+
+router.patch("/:columnId", validate(updateColumnSchema), updateColumn);
+router.delete("/:columnId", deleteColumn);
 
 export default router;

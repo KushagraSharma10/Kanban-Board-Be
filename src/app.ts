@@ -11,12 +11,23 @@ import cookieParser from "cookie-parser";
 
 connectDB();
 const app = express();
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  })
-);
+
+const allowedOrigins = [process.env.CLIENT_ORIGIN];
+
+const corsOptions: cors.CorsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true, 
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -24,7 +35,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/auth", authRoutes);
 app.use("/boards", boardRoutes);
 app.use("/:boardId/columns", columnRoutes)
-app.use("/:boardId/columns", taskRoutes)
+app.use("/:boardId/columns/:columnId", taskRoutes)
 
 
 app.use(errorHandler);

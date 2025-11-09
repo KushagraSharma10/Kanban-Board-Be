@@ -1,13 +1,5 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-
-export interface ColumnDocument extends Document {
-  boardId: Types.ObjectId;
-  name: string;
-  position: number;
-  createdBy: Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { ColumnDocument } from "../interfaces/column";
 
 const columnSchema = new Schema<ColumnDocument>(
   {
@@ -24,6 +16,7 @@ const columnSchema = new Schema<ColumnDocument>(
   { timestamps: true }
 );
 
+columnSchema.index({ boardId: 1, name: 1 }, { unique: true });
 columnSchema.index({ boardId: 1, position: 1 }, { unique: true });
 
 export const ColumnModel = mongoose.model<ColumnDocument>(

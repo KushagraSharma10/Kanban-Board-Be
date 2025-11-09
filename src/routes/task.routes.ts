@@ -17,18 +17,18 @@ const router = Router({ mergeParams: true });
 
 router.use(requireAuth);
 
-router.post(
-  "/:columnId/tasks",
-  validate(createTaskBodySchema),
-  createTaskInColumn
+router.post("/tasks", validate(createTaskBodySchema), createTaskInColumn);
+
+router.patch(
+  "/tasks/:taskId",
+  validate(updateTaskBodySchema),
+  updateTaskDetails
 );
 
-router.patch("/:columnId/tasks/:taskId", validate(updateTaskBodySchema), updateTaskDetails );
+router.get("/tasks", getTasksForColumn);
 
-router.get("/:columnId/tasks", getTasksForColumn);
+router.delete("/tasks/:taskId", deleteTaskFromColumn);
 
-router.delete("/:columnId/tasks/:taskId", deleteTaskFromColumn);
-
-router.get("/:columnId/tasks/:taskId", getTaskById);
+router.get("/tasks/:taskId", getTaskById);
 
 export default router;

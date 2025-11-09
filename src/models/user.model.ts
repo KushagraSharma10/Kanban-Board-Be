@@ -1,18 +1,5 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-
-export type GlobalRole = "admin" | "user";
-
-export interface UserDocument extends Document {
-  fullName: string;
-  email: string;
-  password: string;
-  role: GlobalRole[];
-  boards: Types.ObjectId[];
-  refreshTokenHash?: string | null;
-  refreshTokenExpiresAt?: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { UserDocument } from "../interfaces/user";
 
 const userSchema = new Schema<UserDocument>(
   {

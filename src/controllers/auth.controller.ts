@@ -1,18 +1,18 @@
 import { Request, Response } from "express";
 import {
-  registerUserCore,
-  loginUserCore,
-  getCurrentUserCore,
-  refreshTokensCore,
-  logoutCore,
+  registerUserService,
+  loginUserService,
+  getCurrentUserService,
+  refreshTokensService,
+  logoutService,
 } from "../services/auth.service.js";
 import type { AuthenticatedRequest } from "../middlewares/requireAuth.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { REFRESH_COOKIE_NAME, refreshCookieOptions } from "../utils/jwt.js";
 
-export const register = asyncHandler(async (req: Request, res: Response) => {
+export const register = asyncHandler(async (req: Request, res: Response) => { 
   const { fullName, email, password } = req.body;
-  const result = await registerUserCore({ fullName, email, password });
+  const result = await registerUserService({ fullName, email, password });
 
   res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, {
     ...refreshCookieOptions,
@@ -28,7 +28,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
-  const result = await loginUserCore({ email, password });
+  const result = await loginUserService({ email, password });
   res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, {
     ...refreshCookieOptions,
     expires: result.refreshExpiresAt,
@@ -41,10 +41,10 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-export const getMe = asyncHandler(
+export const getCurrentUser = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
     const userId = req.userId!;
-    const user = await getCurrentUserCore(userId);
+    const user = await getCurrentUserService(userId);
     res.status(200).json({ success: true, data: user });
   }
 );
@@ -56,7 +56,7 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  const result = await refreshTokensCore(tokenFromCookie);
+  const result = await refreshTokensService(tokenFromCookie);
 
   res.cookie(REFRESH_COOKIE_NAME, result.refreshToken, {
     ...refreshCookieOptions,
@@ -72,7 +72,7 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
 
 export const logout = asyncHandler(
   async (req: AuthenticatedRequest, res: Response) => {
-    await logoutCore(req.userId!);
+    await logoutService(req.userId!);
     res.clearCookie(REFRESH_COOKIE_NAME, {
       ...refreshCookieOptions,
       expires: new Date(0),

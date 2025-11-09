@@ -2,18 +2,18 @@ import { Response } from "express";
 import type { AuthenticatedRequest } from "../middlewares/requireAuth.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import {
-  createBoardCore,
+  createBoardService,
   listBoardsForUser,
   getBoard,
-  updateBoardCore,
-  deleteBoardCore,
+  updateBoardService,
+  deleteBoardService,
 } from "../services/board.service.js";
 
 export const createBoard = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const creatorId = req.userId!;
   const { name, type, color } = req.body;
 
-  const board = await createBoardCore(creatorId, { name, type, color });
+  const board = await createBoardService(creatorId, { name, type, color });
   res.status(201).json({ success: true, message: "Board created", data: board });
 });
 
@@ -36,7 +36,7 @@ export const updateBoard = asyncHandler(async (req: AuthenticatedRequest, res: R
   const { id } = req.params;
   const { name, type, color } = req.body;
 
-  const updated = await updateBoardCore(userId, id, { name, type, color });
+  const updated = await updateBoardService(userId, id, { name, type, color });
   res.status(200).json({ success: true, message: "Board updated", data: updated });
 });
 
@@ -44,6 +44,6 @@ export const deleteBoard = asyncHandler(async (req: AuthenticatedRequest, res: R
   const userId = req.userId!;
   const { id } = req.params;
 
-  await deleteBoardCore(userId, id);
+  await deleteBoardService(userId, id);
   res.status(200).json({ success: true, message: "Board deleted" });
 });
