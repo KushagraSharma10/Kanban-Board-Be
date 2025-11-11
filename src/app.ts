@@ -6,10 +6,8 @@ import columnRoutes from "./routes/column.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 import cors from "cors";
 import { errorHandler } from "./middlewares/error.middleware.js";
-import connectDB from "./config/db.js";
 import cookieParser from "cookie-parser";
 
-connectDB();
 const app = express();
 
 const allowedOrigins = [process.env.CLIENT_ORIGIN];
@@ -27,21 +25,13 @@ const corsOptions: cors.CorsOptions = {
 };
 
 app.use(cors(corsOptions));
-
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 app.use("/auth", authRoutes);
 app.use("/boards", boardRoutes);
 app.use("/:boardId/columns", columnRoutes)
 app.use("/:boardId/columns/:columnId", taskRoutes)
-
-
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 4000;
-
-app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
-});
+export default app;

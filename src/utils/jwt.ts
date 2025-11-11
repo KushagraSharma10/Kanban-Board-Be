@@ -1,5 +1,5 @@
 import jwt, { SignOptions } from "jsonwebtoken";
-import { nanoid } from "nanoid";
+import { randomUUID } from "node:crypto";
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET as string;
 const ACCESS_TOKEN_EXPIRES = (process.env.ACCESS_TOKEN_EXPIRES || "15m") as jwt.SignOptions["expiresIn"];
@@ -20,7 +20,7 @@ export const verifyAccessToken = (token: string): AccessPayload =>
 
 export const signRefreshToken = (userId: string): string => {
   const options: SignOptions = { expiresIn: REFRESH_TOKEN_EXPIRES };
-  const payload: RefreshPayload = { userId, tokenId: nanoid(21) };
+  const payload: RefreshPayload = { userId, tokenId: randomUUID() };
   return jwt.sign(payload, JWT_REFRESH_SECRET, options);
 };
 
