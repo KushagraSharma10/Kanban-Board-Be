@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { BoardDocument } from "../interfaces/boards.js";
 import { BoardModel } from "../models/board.model.js";
 import { CreateBoardInput } from "../types/board.js";
@@ -32,3 +33,18 @@ export const saveBoard = async(board: BoardDocument) => {
 export const deleteBoardById = async(boardId: string) => {
   return BoardModel.findByIdAndDelete(boardId);
 }
+
+export const addMemberToBoard = async (
+  boardId: string | Types.ObjectId,
+  userId: string | Types.ObjectId
+) => {
+  return BoardModel.findByIdAndUpdate(
+    boardId,
+    { 
+      $addToSet: { 
+        members: { user: userId, roles: ["user"] } 
+      } 
+    },
+    { new: true }
+  );
+};

@@ -12,10 +12,35 @@ import {
   deleteTaskInBoardColumn,
   compactTaskPositionsAfter,
 } from "../dao/task.dao.js";
+import * as UserDAO from "../dao/user.dao.js";   
+import * as BoardDAO from "../dao/board.dao.js";
 import { ensureAssigneeMembershipAndResolveIds } from "../utils/assignee.helper.js";
 import { CreateTaskBody, UpdateTaskBody } from "../interfaces/task.js";
 
 const isValidObjectId = mongoose.Types.ObjectId.isValid;
+
+const resolveAssigneeUser = async (email: string | null) => {
+  if (!email || email.trim() === "") return null;
+  
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await UserDAO.findUserByEmail(normalizedEmail);
+  
+  if (!user) {
+    throw new ApiError(404, `Assignee with email ${email} not found`);
+  }
+  return { user, normalizedEmail };
+};
+
+const ensureBoardMembership = async (
+  userId: string | Types.ObjectId, 
+  boardId: string | Types.ObjectId
+) => {
+
+  await Promise.all([
+    BoardDAO.addMemberToBoard(boardId, userId),
+    UserDAO.addBoardToUser(userId, boardId)
+  ]);
+};
 
 const ensureBoardAndMember = async (
   requestingUserId: string,
@@ -57,13 +82,14 @@ export const createTask = async (
   let resolvedAssigneeEmail: string | null = null;
 
   if (typeof body.assigneeEmail !== "undefined") {
-    const { assigneeUserId, normalizedAssigneeEmail } =
-      await ensureAssigneeMembershipAndResolveIds(
-        body.assigneeEmail ?? null,
-        boardId
-      );
-    resolvedAssigneeId = assigneeUserId;
-    resolvedAssigneeEmail = normalizedAssigneeEmail;
+    const result = await resolveAssigneeUser(body.assigneeEmail);
+    if (result) {
+      const { user, normalizedEmail } = result;
+      await ensureBoardMembership(user._id as Types.ObjectId, boardId);
+      
+      resolvedAssigneeId = user._id as Types.ObjectId;
+      resolvedAssigneeEmail = normalizedEmail;
+    }
   }
 
   const last = await findLastTaskInColumn(boardId, columnId);
@@ -120,14 +146,19 @@ export const updateTask = async (
     updatePayload.dueDate = body.dueDate ? new Date(body.dueDate) : null;
 
   if (typeof body.assigneeEmail !== "undefined") {
-    const { assigneeUserId, normalizedAssigneeEmail } =
-      await ensureAssigneeMembershipAndResolveIds(
-        body.assigneeEmail ?? null,
-        boardId
-      );
-
-    updatePayload.assigneeId = assigneeUserId;
-    updatePayload.assigneeEmail = normalizedAssigneeEmail;
+    if (!body.assigneeEmail) {
+        updatePayload.assigneeId = null;
+        updatePayload.assigneeEmail = null;
+    } else {
+        const result = await resolveAssigneeUser(body.assigneeEmail);
+        if (result) {
+            const { user, normalizedEmail } = result;
+            await ensureBoardMembership(user._id as Types.ObjectId, boardId);
+            
+            updatePayload.assigneeId = user._id;
+            updatePayload.assigneeEmail = normalizedEmail;
+        }
+    }
   }
 
   const updated = await updateTaskById(taskId, updatePayload);

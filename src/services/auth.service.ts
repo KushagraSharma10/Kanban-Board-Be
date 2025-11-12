@@ -10,11 +10,12 @@ import {
   signAccessToken,
   signRefreshToken,
   verifyRefreshToken,
+  verifyUserRefreshToken,
 } from "../utils/jwt.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Types } from "mongoose";
 import { LoginInput, RegisterInput } from "../types/user.js";
-import { verifyUserRefreshToken } from "../utils/verifyToken.js";
+
 
 const computeRefreshExpiryDate = (): Date => {
   const days =

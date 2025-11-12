@@ -49,7 +49,7 @@ export const getCurrentUser = asyncHandler(
   }
 );
 
-export const refresh = asyncHandler(async (req: Request, res: Response) => {
+export const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
   const tokenFromCookie = req.cookies?.[REFRESH_COOKIE_NAME];
   if (!tokenFromCookie) {
     res.status(401).json({ success: false, message: "No refresh token" });
