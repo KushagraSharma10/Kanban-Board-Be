@@ -61,11 +61,6 @@ export const compactPositionsAfter = (
     { $inc: { position: -1 } }
   );
 
-export const bulkWritePositions = (
-  operations: AnyBulkWriteOperation<ColumnDocument>[]
-) => {
-  return ColumnModel.bulkWrite(operations, { ordered: true });
-};
 
 export const findColumnsByIdsForBoard = (
   boardId: string,
@@ -77,3 +72,10 @@ export const findColumnsByIdsForBoard = (
 
 export const findSingleColumnForBoard = (boardId: string, columnId: string) =>
   ColumnModel.findOne({ _id: columnId, boardId });
+
+export const findColumnByName = (boardId: string, name: string) => {
+  return ColumnModel.findOne({
+    boardId,
+    name: { $regex: new RegExp(`^${name}$`, "i") }, 
+  }).lean();
+};

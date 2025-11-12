@@ -11,6 +11,7 @@ import {
   updateTaskById,
   deleteTaskInBoardColumn,
   compactTaskPositionsAfter,
+  findTaskByTitleInColumn,
 } from "../dao/task.dao.js";
 import { ensureAssigneeMembershipAndResolveIds } from "../utils/assignee.helper.js";
 import { CreateTaskBody, UpdateTaskBody } from "../interfaces/task.js";
@@ -111,7 +112,21 @@ export const updateTask = async (
   if (!existing) throw new ApiError(204, "Task not found");
 
   const updatePayload: Record<string, unknown> = {};
-  if (typeof body.title !== "undefined") updatePayload.title = body.title;
+  if (typeof body.title !== "undefined") {
+    const trimmedTitle = body.title.trim();
+    
+    if (!trimmedTitle) {
+       throw new ApiError(400, "Task title cannot be empty");
+    }
+
+    const duplicateTask = await findTaskByTitleInColumn(boardId, columnId, trimmedTitle);
+
+    if (duplicateTask && duplicateTask._id.toString() !== taskId) {
+      throw new ApiError(409, `Task with title '${trimmedTitle}' already exists in this column`);
+    }
+
+    updatePayload.title = trimmedTitle;
+  }
   if (typeof body.description !== "undefined")
     updatePayload.description = body.description;
   if (typeof body.priority !== "undefined")

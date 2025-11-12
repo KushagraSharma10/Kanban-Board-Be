@@ -17,7 +17,7 @@ const columnSchema = new Schema<ColumnDocument>(
 );
 
 columnSchema.index({ boardId: 1, name: 1 }, { unique: true });
-columnSchema.index({ boardId: 1, position: 1 }, { unique: true });
+columnSchema.index({ boardId: 1, position: 1 });
 
 export const ColumnModel = mongoose.model<ColumnDocument>(
   "Column",

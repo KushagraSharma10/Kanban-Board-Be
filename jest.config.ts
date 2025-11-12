@@ -18,7 +18,14 @@ const config: Config = {
       useESM: true,
     },
   },
+  collectCoverageFrom: [
+    "<rootDir>/src/**/*.{js,ts}",   
+    "!<rootDir>/src/**/*.d.ts",    
+    "!<rootDir>/tests/**",          
+    "!**/node_modules/**",          
+  ],
   
+  coverageDirectory: "coverage",
 };
 
 export default config;

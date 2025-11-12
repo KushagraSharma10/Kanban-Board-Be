@@ -32,7 +32,7 @@ export const updateTaskById = (
   update: Partial<{
     title: string;
     description: string | null;
-    priority: TaskPriority | null;      
+    priority: TaskPriority | null;
     dueDate: Date | null;
     assigneeId: Types.ObjectId | null;
     assigneeEmail: string | null;
@@ -54,3 +54,14 @@ export const compactTaskPositionsAfter = (
     { boardId, columnId, position: { $gt: fromExclusive } },
     { $inc: { position: -1 } }
   );
+
+export const findTaskByTitleInColumn = (
+  boardId: string,
+  columnId: string,
+  title: string
+) =>
+  TaskModel.findOne({
+    boardId,
+    columnId,
+    title: { $regex: new RegExp(`^${title}$`, "i") },
+  }).lean();

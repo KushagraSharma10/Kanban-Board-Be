@@ -11,7 +11,8 @@
     "start": "node dist/server.js",
     "start:http": "node dist/httpServer.js",
     "test": "jest --runInBand",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "type": "module",
   "keywords": [],

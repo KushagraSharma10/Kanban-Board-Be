@@ -1,6 +1,4 @@
-import mongoose, { Types } from "mongoose";
-import { AnyBulkWriteOperation, ObjectId } from "mongodb";
-
+import { Types } from "mongoose";
 import { ApiError } from "../utils/ApiError.js";
 import { isAdmin, isMember } from "../utils/boardAuth.js";
 import { BoardModel } from "../models/board.model.js";
@@ -15,7 +13,9 @@ import {
   compactPositionsAfter,
   findColumnsByIdsForBoard,
   findSingleColumnForBoard,
+  findColumnByName,
 } from "../dao/column.dao.js";
+import { ColumnModel } from "../models/column.model.js";
 
 const ensureBoardAndMembership = async (
   requestingUserId: string,
@@ -66,8 +66,8 @@ export const createColumnService = async (
 
   await ensureBoardAndAdmin(requestingUserId, boardId);
 
-  const last = await findLastColumnInBoard(boardId);
-  const position = last ? (last.position ?? 0) + 1 : 0;
+  const lastColumn = await findLastColumnInBoard(boardId);
+  const position = lastColumn ? (lastColumn.position ?? 0) + 1 : 0;
 
   return createColumnDoc({
     boardId,
@@ -88,7 +88,13 @@ export const updateColumnService = async (
 
   await ensureBoardAndAdmin(requestingUserId, boardId);
 
-  const updated = await updateColumnName(boardId, columnId, name.trim());
+  const trimmedName = name.trim();
+  const existingColumn = await findColumnByName(boardId, trimmedName);
+
+  if (existingColumn && existingColumn._id.toString() !== columnId) {
+    throw new ApiError(409, "Column with this name already exists");
+  }
+  const updated = await updateColumnName(boardId, columnId, trimmedName);
   if (!updated) throw new ApiError(204, "Column not found");
   return updated;
 };
@@ -107,7 +113,6 @@ export const deleteColumnService = async (
   return true;
 };
 
-const TEMP_SHIFT = 10000;
 export const reorderColumnsService = async (
   requestingUserId: string,
   boardId: string,
@@ -119,67 +124,26 @@ export const reorderColumnsService = async (
     throw new ApiError(400, "Updates array is required");
   }
 
-  const finalPositions = updates.map((u) => u.position);
-  const uniqueFinalPositions = new Set(finalPositions);
-  if (uniqueFinalPositions.size !== finalPositions.length) {
-    throw new ApiError(400, "Duplicate final positions in updates");
-  }
-  if (finalPositions.some((p) => p < 0 || !Number.isInteger(p))) {
+  const finalPositions = updates.map((update) => update.position);
+  if (finalPositions.some((position) => position < 0 || !Number.isInteger(position))) {
     throw new ApiError(400, "Positions must be non-negative integers");
   }
 
-  const boardObjectId = new Types.ObjectId(boardId);
-  const targetIds = updates.map((u) => new Types.ObjectId(u.columnId));
-
+  const targetIds = updates.map((update) => new Types.ObjectId(update.columnId));
   const found = await findColumnsByIdsForBoard(boardId, targetIds);
+  
   if (found.length !== updates.length) {
-    throw new ApiError(400, "Invalid columns in updates");
+    throw new ApiError(400, "One or more columns do not belong to this board");
   }
-
-  const finalPositionById = new Map<string, number>();
-  for (const { columnId, position } of updates) {
-    finalPositionById.set(new Types.ObjectId(columnId).toHexString(), position);
-  }
-
-  const shiftOps: AnyBulkWriteOperation[] = updates.map(({ columnId }) => ({
+  const bulkOps = updates.map(({ columnId, position }) => ({
     updateOne: {
-      filter: { _id: new Types.ObjectId(columnId), boardId: boardObjectId },
-      update: { $inc: { position: TEMP_SHIFT } },
+      filter: { _id: new Types.ObjectId(columnId), boardId: new Types.ObjectId(boardId) },
+      update: { $set: { position: position } },
     },
   }));
 
-  const sortedByFinal = [...updates].sort((a, b) => a.position - b.position);
-  const finalizeOps: AnyBulkWriteOperation[] = sortedByFinal.map(
-    ({ columnId, position }) => ({
-      updateOne: {
-        filter: { _id: new Types.ObjectId(columnId), boardId: boardObjectId },
-        update: { $set: { position } },
-      },
-    })
-  );
-
-  const session = await mongoose.startSession();
-  try {
-    session.startTransaction();
-
-    await mongoose.connection
-      .collection("columns")
-      .bulkWrite(shiftOps, { ordered: true, session });
-    await mongoose.connection
-      .collection("columns")
-      .bulkWrite(finalizeOps, { ordered: true, session });
-
-    await session.commitTransaction();
-  } catch (error) {
-    await session.abortTransaction().catch(() => {});
-    await mongoose.connection
-      .collection("columns")
-      .bulkWrite(shiftOps, { ordered: true });
-    await mongoose.connection
-      .collection("columns")
-      .bulkWrite(finalizeOps, { ordered: true });
-  } finally {
-    session.endSession();
+  if (bulkOps.length > 0) {
+    await ColumnModel.bulkWrite(bulkOps);
   }
 
   return findColumnsByBoardIdSorted(boardId);
