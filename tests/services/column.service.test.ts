@@ -90,7 +90,7 @@ describe("ColumnService", () => {
   });
 
   describe("reorderColumnsService", () => {
-    it("should execute bulkWrite directly without transaction", async () => {
+    it("should execute bulkWrite directly ", async () => {
       (BoardModel.findById as jest.Mock).mockResolvedValue(mockBoard);
       (BoardAuth.isMember as jest.Mock).mockReturnValue(true);
       (BoardAuth.isAdmin as jest.Mock).mockReturnValue(true);

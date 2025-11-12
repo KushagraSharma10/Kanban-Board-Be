@@ -39,7 +39,7 @@ const mockServiceResult = {
   refreshExpiresAt: new Date(Date.now() + 100000),
 };
 
-describe("AuthController", () => {
+describe("Auth Controller", () => {
   let mockResponse: Response;
   const mockNext = jest.fn();
 
