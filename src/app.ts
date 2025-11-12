@@ -1,4 +1,5 @@
 import "dotenv/config";
+import "./config/passport.js";
 import express from "express";
 import boardRoutes from "./routes/board.routes.js";
 import authRoutes from "./routes/auth.routes.js";
@@ -7,6 +8,7 @@ import taskRoutes from "./routes/task.routes.js";
 import cors from "cors";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import cookieParser from "cookie-parser";
+import passport from "passport";
 
 const app = express();
 
@@ -28,6 +30,7 @@ app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(passport.initialize());
 app.use("/auth", authRoutes);
 app.use("/boards", boardRoutes);
 app.use("/:boardId/columns", columnRoutes)

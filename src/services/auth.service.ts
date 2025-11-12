@@ -16,7 +16,7 @@ import { Types } from "mongoose";
 import { LoginInput, RegisterInput } from "../types/user.js";
 import { verifyUserRefreshToken } from "../utils/verifyToken.js";
 
-const computeRefreshExpiryDate = (): Date => {
+export const computeRefreshExpiryDate = (): Date => {
   const days =
     Number(
       String(process.env.REFRESH_TOKEN_EXPIRES || "7d").replace("d", "")
@@ -65,6 +65,10 @@ export const registerUserService = async (input: RegisterInput) => {
 export const loginUserService = async (input: LoginInput) => {
   const user = await findUserByEmail(input.email);
   if (!user) throw new ApiError(401, "Invalid credentials");
+
+  if (!user.password) {
+    throw new ApiError(401, "Invalid credentials (Try logging in with Google)");
+  }
 
   const isPasswordValid = await bcrypt.compare(input.password, user.password);
   if (!isPasswordValid) throw new ApiError(401, "Invalid credentials");

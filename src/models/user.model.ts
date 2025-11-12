@@ -10,7 +10,13 @@ const userSchema = new Schema<UserDocument>(
       lowercase: true,
       trim: true,
     },
-    password: { type: String, required: true },
+    password: { type: String, required: false },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, 
+    },
+    avatar: { type: String },
     role: {
       type: [String],
       enum: ["admin", "user"],
