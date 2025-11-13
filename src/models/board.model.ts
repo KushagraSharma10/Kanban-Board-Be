@@ -24,7 +24,7 @@ const boardSchema = new Schema<BoardDocument>(
   { timestamps: true }
 );
 
-boardSchema.index({ createdBy: 1, name: 1 }, );
+boardSchema.index({ createdBy: 1, name: 1 }, { unique: true });
 boardSchema.index({ "members.user": 1 });
 
 export const BoardModel = mongoose.model<BoardDocument>("Board", boardSchema);
