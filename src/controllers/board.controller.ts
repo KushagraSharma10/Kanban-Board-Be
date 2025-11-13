@@ -1,66 +1,49 @@
-import * as boardService from "../services/board.service.js";
-import { ApiError } from "../utils/ApiError.js";
+import { Response } from "express";
+import type { AuthenticatedRequest } from "../middlewares/requireAuth.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
+import {
+  createBoardService,
+  listBoardsForUser,
+  getBoard,
+  updateBoardService,
+  deleteBoardService,
+} from "../services/board.service.js";
 
-export const getBoards = asyncHandler(async (_req, res) => {
-  const boards = await boardService.readBoardsFromFile();
-  res.status(200).json({
-    success: true,
-    message: "Boards fetched successfully.",
-    data: boards,
-  });
+export const createBoard = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const creatorId = req.userId!;
+  const { name, type, color } = req.body;
+
+  const board = await createBoardService(creatorId, { name, type, color });
+  res.status(201).json({ success: true, message: "Board created", data: board });
 });
 
-export const getBoardById = asyncHandler(async (req, res) => {
-  const board = await boardService.findBoardById(req.params.id);
-  if (!board) throw new ApiError(204, "Board not found.");
-  res
-    .status(200)
-    .json({
-      success: true,
-      message: "Board fetched successfully.",
-      data: board,
-    });
-}); 
-
-export const createBoard = asyncHandler(async (req, res) => {
-  const { name, color } = req.body;
-  if (!name || !color) throw new ApiError(400, "Missing name or color.");
-  const newBoard = await boardService.addNewBoard(name, color);
-  res
-    .status(201)
-    .json({
-      success: true,
-      message: "Board created successfully.",
-      data: newBoard,
-    });
+export const getMyBoards = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.userId!;
+  const boards = await listBoardsForUser(userId);
+  res.status(200).json({ success: true, data: boards });
 });
 
-export const updateBoard = asyncHandler(async (req, res) => {
-  const updates = req.body;
-  if (!Object.keys(updates).length) {
-    throw new ApiError(400, "No fields provided for update.");
-  }
-  const updatedBoard = await boardService.modifyBoardById(
-    req.params.id,
-    updates
-  );
-  if (!updatedBoard) throw new ApiError(204, "Board not found for update.");
-  res
-    .status(200)
-    .json({
-      success: true,
-      message: "Board updated successfully.",
-      data: updatedBoard,
-    });
+export const getBoardById = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.userId!;
+  const { id } = req.params;
+
+  const board = await getBoard(userId, id);
+  res.status(200).json({ success: true, data: board });
 });
 
-export const deleteBoard = asyncHandler(async (req, res) => {
-  const success = await boardService.removeBoardById(req.params.id);
-  if (!success) throw new ApiError(204, "Board not found to delete.");
-  res.status(200).json({
-    success: true,
-    message: "Board deleted successfully.",
-    data: { deletedBoardId: req.params.id },
-  });
+export const updateBoard = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.userId!;
+  const { id } = req.params;
+  const { name, type, color } = req.body;
+
+  const updated = await updateBoardService(userId, id, { name, type, color });
+  res.status(200).json({ success: true, message: "Board updated", data: updated });
+});
+
+export const deleteBoard = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.userId!;
+  const { id } = req.params;
+
+  await deleteBoardService(userId, id);
+  res.status(200).json({ success: true, message: "Board deleted" });
 });
