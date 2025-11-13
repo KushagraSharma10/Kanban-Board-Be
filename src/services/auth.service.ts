@@ -147,3 +147,17 @@ export const logoutService = async (userId: string) => {
   await clearRefreshTokenForUser(userId);
   return true;
 };
+
+export const handleGoogleLoginService = async (userId: string | Types.ObjectId) => {
+  const accessToken = signAccessToken({ userId: String(userId) });
+  const refreshToken = signRefreshToken(String(userId));
+  const refreshExpiresAt = computeRefreshExpiryDate();
+
+  await setRefreshTokenForUser(
+    userId as Types.ObjectId,
+    refreshToken,
+    refreshExpiresAt
+  );
+
+  return { accessToken, refreshToken, refreshExpiresAt };
+};

@@ -3,7 +3,7 @@ import {
   register,
   login,
   getCurrentUser,
-  refresh,
+  refreshToken as refresh,
   logout,
 } from "../../src/controllers/auth.controller.js";
 import {

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { register, login, getCurrentUser, logout, refresh, googleAuthCallback } from "../controllers/auth.controller.js";
+import { register, login, getCurrentUser, logout, refreshToken, googleAuthCallback } from "../controllers/auth.controller.js";
 import { validate } from "../middlewares/validate.middleware.js";
 import { registerSchema, loginSchema } from "../validators/auth.schema.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
@@ -11,13 +11,15 @@ router.post("/register", validate(registerSchema), register);
 router.post("/login", validate(loginSchema), login);
 router.get("/user", requireAuth, getCurrentUser);
 
-router.post("/refresh", refresh);
+router.post("/refresh", refreshToken);
 
 router.post("/logout", requireAuth, logout);
 
 router.get(
   "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { scope: ["profile", "email"],
+    prompt: "select_account"
+   })
 );
 
 router.get(

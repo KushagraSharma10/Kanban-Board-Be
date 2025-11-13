@@ -6,12 +6,14 @@ import {
   refreshTokensService,
   logoutService,
   computeRefreshExpiryDate,
+  handleGoogleLoginService,
 } from "../services/auth.service.js";
 import type { AuthenticatedRequest } from "../middlewares/requireAuth.js";
 import { asyncHandler } from "../middlewares/asyncHandler.js";
 import { signAccessToken, signRefreshToken, REFRESH_COOKIE_NAME, refreshCookieOptions } from "../utils/jwt.js";
 import { setRefreshTokenForUser } from "../dao/user.dao.js";
 import { Types } from "mongoose";
+import { UserDocument } from "../interfaces/user.js";
 
 export const register = asyncHandler(async (req: Request, res: Response) => { 
   const { fullName, email, password } = req.body;
@@ -52,7 +54,7 @@ export const getCurrentUser = asyncHandler(
   }
 );
 
-export const refresh = asyncHandler(async (req: Request, res: Response) => {
+export const refreshToken = asyncHandler(async (req: Request, res: Response) => {
   const tokenFromCookie = req.cookies?.[REFRESH_COOKIE_NAME];
   if (!tokenFromCookie) {
     res.status(401).json({ success: false, message: "No refresh token" });
@@ -85,22 +87,12 @@ export const logout = asyncHandler(
 );
 
 export const googleAuthCallback = asyncHandler(async (req: Request, res: Response) => {
-  const user = req.user as any; 
+  const user = req.user as UserDocument; 
 
   if (!user) {
     return res.redirect(`${process.env.CLIENT_ORIGIN}/login?error=auth_failed`);
   }
-
-  const accessToken = signAccessToken({ userId: String(user._id) });
-  const refreshToken = signRefreshToken(String(user._id));
-  const refreshExpiresAt = computeRefreshExpiryDate();
-
-  await setRefreshTokenForUser(
-    user._id as Types.ObjectId,
-    refreshToken,
-    refreshExpiresAt
-  );
-
+  const { refreshToken, refreshExpiresAt } = await handleGoogleLoginService(user._id as Types.ObjectId);
   res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
     ...refreshCookieOptions,
     expires: refreshExpiresAt,
